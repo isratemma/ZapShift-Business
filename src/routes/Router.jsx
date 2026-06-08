@@ -1,7 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom';
 import RootLayout from '../layouts/RootLayout';
 import Home from '../pages/Home/Home';
-
+import Coverage from '../pages/Coverage/Coverage';
 
 export const router = createBrowserRouter([
   {
@@ -11,6 +11,10 @@ export const router = createBrowserRouter([
       {
         index: true,
         Component: Home
+      },
+      {
+        path: 'coverage',
+        Component: Coverage
       }
     ]
   },
