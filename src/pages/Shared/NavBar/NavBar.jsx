@@ -4,7 +4,7 @@ import Logo from '../../../components/Logo/Logo';
 
 const NavBar = () => {
   const links = (
-    <>
+    <ul className="menu menu-horizontal px-1 text-xl font-medium">
       <li>
         <NavLink to="/">Home</NavLink>
       </li>
@@ -20,10 +20,7 @@ const NavBar = () => {
       <li>
         <NavLink to="/pricing">Pricing</NavLink>
       </li>
-      <li>
-        <NavLink to="/rider">Be a Rider</NavLink>
-      </li>
-    </>
+    </ul>
   );
   return (
     <div className="navbar bg-base-100 shadow-sm">
@@ -60,8 +57,19 @@ const NavBar = () => {
       <div className="navbar-center hidden lg:flex">
         <ul className="menu menu-horizontal px-1">{links}</ul>
       </div>
-      <div className="navbar-end">
-        <a className="btn">Button</a>
+      <div className="navbar-end flex items-center gap-3">
+        <NavLink
+          to="/rider"
+          className="hidden md:inline-flex border border-[#03373D] text-[#03373D] hover:bg-[#03373D] hover:text-white font-semibold px-5 py-2 rounded-full text-sm transition-all duration-200"
+        >
+          Be a Rider
+        </NavLink>
+        <NavLink
+          to="/signin"
+          className="bg-[#CAEB66] hover:bg-[#b5dc2a] text-black font-semibold px-5 py-2 rounded-full text-sm transition-all duration-200"
+        >
+          Sign In
+        </NavLink>
       </div>
     </div>
   );
