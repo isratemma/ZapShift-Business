@@ -1,8 +1,4 @@
 import React from 'react';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Autoplay } from 'swiper/modules';
-import 'swiper/css';
-
 import casio from '../../assets/brands/casio.png';
 import amazon from '../../assets/brands/amazon.png';
 import moonstar from '../../assets/brands/moonstar.png';
@@ -10,38 +6,50 @@ import star from '../../assets/brands/star.png';
 import startPeople from '../../assets/brands/start_people.png';
 import randstad from '../../assets/brands/randstad.png';
 
-const brands = [casio, amazon, moonstar, star, startPeople, randstad];
+const brands = [
+  { img: casio, name: 'Casio' },
+  { img: amazon, name: 'Amazon' },
+  { img: moonstar, name: 'Moonstar' },
+  { img: star, name: 'Star' },
+  { img: startPeople, name: 'Start People' },
+  { img: randstad, name: 'Randstad' },
+];
+
+// duplicate for seamless loop
+const allBrands = [...brands, ...brands];
 
 const Brands = () => {
   return (
-    <section className="py-10 px-6 md:px-16 bg-white border-y border-gray-100">
+    <section className="py-10 bg-white border-y border-gray-100 overflow-hidden">
       <p className="text-center text-gray-500 text-sm mb-6">
         We've helped thousands of sales teams
       </p>
-      <Swiper
-        modules={[Autoplay]}
-        autoplay={{ delay: 0, disableOnInteraction: false }}
-        speed={3000}
-        loop={true}
-        slidesPerView={2}
-        spaceBetween={40}
-        breakpoints={{
-          480: { slidesPerView: 3 },
-          768: { slidesPerView: 4 },
-          1024: { slidesPerView: 6 },
-        }}
-        allowTouchMove={false}
-      >
-        {brands.map((brand, index) => (
-          <SwiperSlide key={index} className="flex items-center justify-center">
+
+      <div className="relative w-full overflow-hidden">
+        <div className="flex gap-16 animate-marquee whitespace-nowrap">
+          {allBrands.map((brand, index) => (
             <img
-              src={brand}
-              alt={`brand-${index}`}
-              className="h-8 object-contain grayscale hover:grayscale-0 transition-all duration-300 mx-auto"
+              key={index}
+              src={brand.img}
+              alt={brand.name}
+              className="h-8 object-contain grayscale hover:grayscale-0 transition-all duration-300 inline-block flex-shrink-0"
             />
-          </SwiperSlide>
-        ))}
-      </Swiper>
+          ))}
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes marquee {
+          0%   { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .animate-marquee {
+          animation: marquee 12s linear infinite;
+        }
+        .animate-marquee:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
     </section>
   );
 };
