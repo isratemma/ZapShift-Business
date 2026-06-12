@@ -1,10 +1,9 @@
-import React, { useMemo, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import React, { useMemo, useState, useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useLoaderData } from 'react-router';
 import L from 'leaflet';
 
-// Fix default marker icons broken by webpack/vite
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
@@ -17,6 +16,17 @@ L.Icon.Default.mergeOptions({
 });
 
 const defaultPosition = [23.685, 90.3563];
+
+// This component lives inside MapContainer so it can access the map instance
+const FlyToLocation = ({ center }) => {
+  const map = useMap();
+  useEffect(() => {
+    if (center) {
+      map.flyTo(center, 10, { duration: 1.2 });
+    }
+  }, [center, map]);
+  return null;
+};
 
 const Coverage = () => {
   const warehouses = useLoaderData();
@@ -67,12 +77,8 @@ const Coverage = () => {
 
       {/* Search */}
       <form onSubmit={handleSearch} className="flex gap-3 mb-8">
-        <label className="input flex items-center gap-2 flex-1 max-w-sm border border-gray-300 rounded-xl px-4 py-2">
-          <svg
-            className="h-4 w-4 opacity-50"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-          >
+        <div className="flex items-center gap-2 flex-1 max-w-sm border border-gray-300 rounded-xl px-4 py-2 bg-white">
+          <svg className="h-4 w-4 opacity-50 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
             <g strokeLinejoin="round" strokeLinecap="round" strokeWidth="2.5" fill="none" stroke="currentColor">
               <circle cx="11" cy="11" r="8" />
               <path d="m21 21-4.3-4.3" />
@@ -84,7 +90,7 @@ const Coverage = () => {
             placeholder="Search district or area..."
             className="outline-none bg-transparent w-full text-sm"
           />
-        </label>
+        </div>
         <button
           type="submit"
           className="bg-[#CAEB66] hover:bg-[#b5dc2a] text-black font-semibold px-5 py-2 rounded-xl text-sm transition-all duration-200"
@@ -94,9 +100,12 @@ const Coverage = () => {
       </form>
 
       {/* Map */}
-      <div className="w-full overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm" style={{ height: '500px' }}>
+      <div
+        className="w-full overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"
+        style={{ height: '500px' }}
+      >
         <MapContainer
-          center={mapCenter}
+          center={defaultPosition}
           zoom={7}
           scrollWheelZoom={false}
           style={{ height: '100%', width: '100%' }}
@@ -105,6 +114,10 @@ const Coverage = () => {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
+
+          {/* Flies to new center whenever mapCenter changes */}
+          <FlyToLocation center={mapCenter} />
+
           {filteredWarehouses.map((w, index) => (
             <Marker key={index} position={[w.latitude, w.longitude]}>
               <Popup>
