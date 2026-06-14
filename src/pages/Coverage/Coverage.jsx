@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useLoaderData } from 'react-router';
@@ -22,7 +22,7 @@ const FlyToLocation = ({ center }) => {
   const map = useMap();
   useEffect(() => {
     if (center) {
-      map.flyTo(center, 10, { duration: 1.2 });
+      map.flyTo(center, 14, { duration: 1.2 });
     }
   }, [center, map]);
   return null;
@@ -32,6 +32,8 @@ const Coverage = () => {
   const warehouses = useLoaderData();
   const [mapCenter, setMapCenter] = useState(defaultPosition);
   const [searchQuery, setSearchQuery] = useState('');
+  const mapRef = useRef(null);
+
 
   const filteredWarehouses = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -109,6 +111,7 @@ const Coverage = () => {
           zoom={7}
           scrollWheelZoom={false}
           style={{ height: '100%', width: '100%' }}
+          ref={mapRef}
         >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
