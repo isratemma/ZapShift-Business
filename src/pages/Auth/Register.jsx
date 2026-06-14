@@ -1,11 +1,33 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router';
 
+const rules = [
+  { id: 'length',   label: 'At least 8 characters',          test: (p) => p.length >= 8 },
+  { id: 'upper',    label: 'One uppercase letter (A-Z)',      test: (p) => /[A-Z]/.test(p) },
+  { id: 'lower',    label: 'One lowercase letter (a-z)',      test: (p) => /[a-z]/.test(p) },
+  { id: 'number',   label: 'One number (0-9)',                test: (p) => /[0-9]/.test(p) },
+  { id: 'special',  label: 'One special character (!@#$...)', test: (p) => /[^A-Za-z0-9]/.test(p) },
+];
+
+const getStrength = (passed) => {
+  if (passed === 5) return { label: 'Strong', color: 'bg-green-500', width: 'w-full' };
+  if (passed >= 3) return { label: 'Medium', color: 'bg-yellow-400', width: 'w-3/5' };
+  if (passed >= 1) return { label: 'Weak',   color: 'bg-red-400',    width: 'w-1/5' };
+  return { label: '', color: '', width: 'w-0' };
+};
+
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [password, setPassword]         = useState('');
+  const [focused, setFocused]           = useState(false);
+
+  const passed   = rules.filter((r) => r.test(password)).length;
+  const allValid = passed === rules.length;
+  const strength = getStrength(passed);
 
   const handleRegister = (e) => {
     e.preventDefault();
+    if (!allValid) return;
     // TODO: connect Firebase auth
   };
 
@@ -58,8 +80,18 @@ const Register = () => {
               type={showPassword ? 'text' : 'password'}
               name="password"
               required
-              placeholder="Min. 8 characters"
-              className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#CAEB66] focus:ring-2 focus:ring-[#CAEB66]/30 transition pr-11"
+              placeholder="Create a strong password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
+              className={`w-full border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 transition pr-11 ${
+                password.length === 0
+                  ? 'border-gray-300 focus:border-[#CAEB66] focus:ring-[#CAEB66]/30'
+                  : allValid
+                  ? 'border-green-400 focus:border-green-400 focus:ring-green-100'
+                  : 'border-red-300 focus:border-red-400 focus:ring-red-100'
+              }`}
             />
             <button
               type="button"
@@ -69,6 +101,44 @@ const Register = () => {
               {showPassword ? 'Hide' : 'Show'}
             </button>
           </div>
+
+          {/* Strength bar */}
+          {password.length > 0 && (
+            <div className="mt-2">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs text-gray-400">Password strength</span>
+                <span className={`text-xs font-semibold ${
+                  passed === 5 ? 'text-green-600' : passed >= 3 ? 'text-yellow-600' : 'text-red-500'
+                }`}>
+                  {strength.label}
+                </span>
+              </div>
+              <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div className={`h-full rounded-full transition-all duration-300 ${strength.color} ${strength.width}`} />
+              </div>
+            </div>
+          )}
+
+          {/* Rules checklist — shows on focus or when typing */}
+          {(focused || password.length > 0) && (
+            <ul className="mt-3 flex flex-col gap-1.5 bg-gray-50 rounded-xl p-3 border border-gray-100">
+              {rules.map((rule) => {
+                const ok = rule.test(password);
+                return (
+                  <li key={rule.id} className="flex items-center gap-2 text-xs">
+                    <span className={`w-4 h-4 rounded-full flex items-center justify-center text-white text-[10px] flex-shrink-0 ${
+                      ok ? 'bg-green-500' : 'bg-gray-300'
+                    }`}>
+                      {ok ? '✓' : ''}
+                    </span>
+                    <span className={ok ? 'text-green-700 font-medium' : 'text-gray-500'}>
+                      {rule.label}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </div>
 
         {/* Terms */}
@@ -85,7 +155,12 @@ const Register = () => {
         {/* Submit */}
         <button
           type="submit"
-          className="w-full bg-[#CAEB66] hover:bg-[#b5dc2a] text-black font-bold py-2.5 rounded-xl transition-all duration-200"
+          disabled={!allValid}
+          className={`w-full font-bold py-2.5 rounded-xl transition-all duration-200 ${
+            allValid
+              ? 'bg-[#CAEB66] hover:bg-[#b5dc2a] text-black cursor-pointer'
+              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+          }`}
         >
           Create Account
         </button>
