@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import RootLayout from '../layouts/RootLayout';
 import Home from '../pages/Home/Home';
 import Coverage from '../pages/Coverage/Coverage';
+import AuthLayouts from '../layouts/AuthLayouts';
 
 export const router = createBrowserRouter([
   {
@@ -15,9 +16,11 @@ export const router = createBrowserRouter([
       {
         path: 'coverage',
         Component: Coverage,
-        loader: () => {
-          return fetch('/warehouses.json').then((res) => res.json());
-        },
+        loader: () => fetch('/warehouses.json').then((res) => res.json()),
+      },
+      {
+        path: 'auth',
+        Component: AuthLayouts,
       },
     ],
   },
