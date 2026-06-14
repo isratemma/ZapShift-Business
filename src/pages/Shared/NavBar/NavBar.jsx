@@ -65,7 +65,7 @@ const NavBar = () => {
           Be a Rider
         </NavLink>
         <NavLink
-          to="/signin"
+          to="/auth/login"
           className="bg-[#CAEB66] hover:bg-[#b5dc2a] text-black font-semibold px-5 py-2 rounded-full text-sm transition-all duration-200"
         >
           Sign In
