@@ -1,18 +1,19 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
+import useAuth from '../../hooks/useAuth';
 
 const rules = [
-  { id: 'length',   label: 'At least 8 characters',          test: (p) => p.length >= 8 },
-  { id: 'upper',    label: 'One uppercase letter (A-Z)',      test: (p) => /[A-Z]/.test(p) },
-  { id: 'lower',    label: 'One lowercase letter (a-z)',      test: (p) => /[a-z]/.test(p) },
-  { id: 'number',   label: 'One number (0-9)',                test: (p) => /[0-9]/.test(p) },
-  { id: 'special',  label: 'One special character (!@#$...)', test: (p) => /[^A-Za-z0-9]/.test(p) },
+  { id: 'length',  label: 'At least 8 characters',           test: (p) => p.length >= 8 },
+  { id: 'upper',   label: 'One uppercase letter (A-Z)',       test: (p) => /[A-Z]/.test(p) },
+  { id: 'lower',   label: 'One lowercase letter (a-z)',       test: (p) => /[a-z]/.test(p) },
+  { id: 'number',  label: 'One number (0-9)',                 test: (p) => /[0-9]/.test(p) },
+  { id: 'special', label: 'One special character (!@#$...)',  test: (p) => /[^A-Za-z0-9]/.test(p) },
 ];
 
 const getStrength = (passed) => {
   if (passed === 5) return { label: 'Strong', color: 'bg-green-500', width: 'w-full' };
-  if (passed >= 3) return { label: 'Medium', color: 'bg-yellow-400', width: 'w-3/5' };
-  if (passed >= 1) return { label: 'Weak',   color: 'bg-red-400',    width: 'w-1/5' };
+  if (passed >= 3)  return { label: 'Medium', color: 'bg-yellow-400', width: 'w-3/5' };
+  if (passed >= 1)  return { label: 'Weak',   color: 'bg-red-400',    width: 'w-1/5' };
   return { label: '', color: '', width: 'w-0' };
 };
 
@@ -20,21 +21,56 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword]         = useState('');
   const [focused, setFocused]           = useState(false);
+  const [error, setError]               = useState('');
+  const [loading, setLoading]           = useState(false);
+
+  const { registerUser, updateUserProfile, signInWithGoogle } = useAuth();
+  const navigate = useNavigate();
 
   const passed   = rules.filter((r) => r.test(password)).length;
   const allValid = passed === rules.length;
   const strength = getStrength(passed);
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     if (!allValid) return;
-    // TODO: connect Firebase auth
+    setError('');
+    setLoading(true);
+
+    const name  = e.target.name.value;
+    const email = e.target.email.value;
+
+    try {
+      await registerUser(email, password);
+      await updateUserProfile(name);
+      navigate('/');
+    } catch (err) {
+      setError(friendlyError(err.code));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogle = async () => {
+    setError('');
+    try {
+      await signInWithGoogle();
+      navigate('/');
+    } catch (err) {
+      setError(friendlyError(err.code));
+    }
   };
 
   return (
     <section className="bg-white rounded-2xl shadow-lg p-8 w-full">
       <h2 className="text-2xl font-bold text-gray-900 mb-1">Create Account</h2>
       <p className="text-gray-500 text-sm mb-7">Join ZapShift and start shipping today</p>
+
+      {error && (
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3">
+          {error}
+        </div>
+      )}
 
       <form onSubmit={handleRegister} className="flex flex-col gap-5">
         {/* Name */}
@@ -107,9 +143,7 @@ const Register = () => {
             <div className="mt-2">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs text-gray-400">Password strength</span>
-                <span className={`text-xs font-semibold ${
-                  passed === 5 ? 'text-green-600' : passed >= 3 ? 'text-yellow-600' : 'text-red-500'
-                }`}>
+                <span className={`text-xs font-semibold ${passed === 5 ? 'text-green-600' : passed >= 3 ? 'text-yellow-600' : 'text-red-500'}`}>
                   {strength.label}
                 </span>
               </div>
@@ -119,21 +153,17 @@ const Register = () => {
             </div>
           )}
 
-          {/* Rules checklist — shows on focus or when typing */}
+          {/* Rules checklist */}
           {(focused || password.length > 0) && (
             <ul className="mt-3 flex flex-col gap-1.5 bg-gray-50 rounded-xl p-3 border border-gray-100">
               {rules.map((rule) => {
                 const ok = rule.test(password);
                 return (
                   <li key={rule.id} className="flex items-center gap-2 text-xs">
-                    <span className={`w-4 h-4 rounded-full flex items-center justify-center text-white text-[10px] flex-shrink-0 ${
-                      ok ? 'bg-green-500' : 'bg-gray-300'
-                    }`}>
+                    <span className={`w-4 h-4 rounded-full flex items-center justify-center text-white text-[10px] flex-shrink-0 ${ok ? 'bg-green-500' : 'bg-gray-300'}`}>
                       {ok ? '✓' : ''}
                     </span>
-                    <span className={ok ? 'text-green-700 font-medium' : 'text-gray-500'}>
-                      {rule.label}
-                    </span>
+                    <span className={ok ? 'text-green-700 font-medium' : 'text-gray-500'}>{rule.label}</span>
                   </li>
                 );
               })}
@@ -155,14 +185,14 @@ const Register = () => {
         {/* Submit */}
         <button
           type="submit"
-          disabled={!allValid}
+          disabled={!allValid || loading}
           className={`w-full font-bold py-2.5 rounded-xl transition-all duration-200 ${
-            allValid
+            allValid && !loading
               ? 'bg-[#CAEB66] hover:bg-[#b5dc2a] text-black cursor-pointer'
               : 'bg-gray-200 text-gray-400 cursor-not-allowed'
           }`}
         >
-          Create Account
+          {loading ? 'Creating account...' : 'Create Account'}
         </button>
 
         {/* Divider */}
@@ -175,6 +205,7 @@ const Register = () => {
         {/* Google */}
         <button
           type="button"
+          onClick={handleGoogle}
           className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-xl py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -195,6 +226,15 @@ const Register = () => {
       </p>
     </section>
   );
+};
+
+const friendlyError = (code) => {
+  switch (code) {
+    case 'auth/email-already-in-use': return 'This email is already registered.';
+    case 'auth/invalid-email':        return 'Please enter a valid email address.';
+    case 'auth/weak-password':        return 'Password is too weak.';
+    default:                          return 'Something went wrong. Please try again.';
+  }
 };
 
 export default Register;
