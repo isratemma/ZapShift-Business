@@ -1,18 +1,52 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
+import useAuth from '../../hooks/useAuth';
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError]               = useState('');
+  const [loading, setLoading]           = useState(false);
 
-  const handleLogin = (e) => {
+  const { signInUser, signInWithGoogle } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-    // TODO: connect Firebase auth
+    setError('');
+    setLoading(true);
+    const email    = e.target.email.value;
+    const password = e.target.password.value;
+
+    try {
+      await signInUser(email, password);
+      navigate('/');
+    } catch (err) {
+      setError(friendlyError(err.code));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogle = async () => {
+    setError('');
+    try {
+      await signInWithGoogle();
+      navigate('/');
+    } catch (err) {
+      setError(friendlyError(err.code));
+    }
   };
 
   return (
     <section className="bg-white rounded-2xl shadow-lg p-8 w-full">
       <h2 className="text-2xl font-bold text-gray-900 mb-1">Welcome Back</h2>
       <p className="text-gray-500 text-sm mb-7">Sign in to your ZapShift account</p>
+
+      {error && (
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3">
+          {error}
+        </div>
+      )}
 
       <form onSubmit={handleLogin} className="flex flex-col gap-5">
         {/* Email */}
@@ -31,10 +65,7 @@ const Login = () => {
         <div className="flex flex-col gap-1">
           <div className="flex items-center justify-between">
             <label className="text-sm font-semibold text-gray-700">Password</label>
-            <Link
-              to="/auth/forgot-password"
-              className="text-xs text-[#03373D] hover:underline font-medium"
-            >
+            <Link to="/auth/forgot-password" className="text-xs text-[#03373D] hover:underline font-medium">
               Forgot password?
             </Link>
           </div>
@@ -59,9 +90,10 @@ const Login = () => {
         {/* Submit */}
         <button
           type="submit"
-          className="w-full bg-[#CAEB66] hover:bg-[#b5dc2a] text-black font-bold py-2.5 rounded-xl transition-all duration-200"
+          disabled={loading}
+          className="w-full bg-[#CAEB66] hover:bg-[#b5dc2a] disabled:bg-gray-200 disabled:text-gray-400 text-black font-bold py-2.5 rounded-xl transition-all duration-200"
         >
-          Sign In
+          {loading ? 'Signing in...' : 'Sign In'}
         </button>
 
         {/* Divider */}
@@ -74,6 +106,7 @@ const Login = () => {
         {/* Google */}
         <button
           type="button"
+          onClick={handleGoogle}
           className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-xl py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -94,6 +127,17 @@ const Login = () => {
       </p>
     </section>
   );
+};
+
+const friendlyError = (code) => {
+  switch (code) {
+    case 'auth/user-not-found':
+    case 'auth/invalid-credential':  return 'Invalid email or password.';
+    case 'auth/wrong-password':      return 'Incorrect password.';
+    case 'auth/too-many-requests':   return 'Too many attempts. Try again later.';
+    case 'auth/user-disabled':       return 'This account has been disabled.';
+    default:                         return 'Something went wrong. Please try again.';
+  }
 };
 
 export default Login;
