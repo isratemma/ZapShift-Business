@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom';
 import RootLayout from '../layouts/RootLayout';
 import AuthLayouts from '../layouts/AuthLayouts';
+import PrivateRoute from './PrivateRoute';
 import Home from '../pages/Home/Home';
 import Coverage from '../pages/Coverage/Coverage';
 import Login from '../pages/Auth/Login';
@@ -18,7 +19,11 @@ export const router = createBrowserRouter([
       },
       {
         path: 'coverage',
-        Component: Coverage,
+        element: (
+          <PrivateRoute>
+            <Coverage />
+          </PrivateRoute>
+        ),
         loader: () => fetch('/warehouses.json').then((res) => res.json()),
       },
     ],
@@ -27,9 +32,9 @@ export const router = createBrowserRouter([
     path: '/auth',
     Component: AuthLayouts,
     children: [
-      { path: 'login', Component: Login },
-      { path: 'register', Component: Register },
-      { path: 'forgot-password', Component: ForgotPassword },
+      { path: 'login',            Component: Login },
+      { path: 'register',         Component: Register },
+      { path: 'forgot-password',  Component: ForgotPassword },
     ],
   },
 ]);
