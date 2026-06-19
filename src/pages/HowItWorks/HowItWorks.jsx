@@ -34,7 +34,7 @@ const HowItWorks = () => {
             key={index}
             className="bg-[#fdf5f0] rounded-2xl p-6 flex flex-col gap-3 hover:shadow-md transition-shadow duration-200"
           >
-            <img src={item.icon} alt={item.title} className="w-12 h-12 object-contain" />
+            <img src={item.icon} alt={item.title} className="w-12 h-12 object-contain" loading="lazy" />
             <h3 className="font-semibold text-gray-900 text-base">{item.title}</h3>
             <p className="text-gray-500 text-sm leading-relaxed">{item.description}</p>
           </div>

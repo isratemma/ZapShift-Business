@@ -15,6 +15,7 @@ const MerchantCTA = () => {
         src={merchantBg}
         alt=""
         className="absolute inset-0 w-full h-full object-cover opacity-20 pointer-events-none"
+        loading="lazy"
       />
 
       <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8 p-10 md:p-14">
@@ -45,6 +46,7 @@ const MerchantCTA = () => {
           src={locationImg}
           alt="merchant"
           className="w-56 md:w-72 object-contain flex-shrink-0"
+          loading="lazy"
         />
       </div>
     </section>

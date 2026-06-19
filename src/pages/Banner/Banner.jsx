@@ -16,13 +16,13 @@ const Banner = () => {
         showArrows={false}
       >
         <div>
-          <img src={bannerImg1} className="w-full object-cover" alt="Banner 1" />
+          <img src={bannerImg1} className="w-full object-cover" alt="Banner 1" loading="eager" />
         </div>
         <div>
-          <img src={bannerImg2} className="w-full object-cover" alt="Banner 2" />
+          <img src={bannerImg2} className="w-full object-cover" alt="Banner 2" loading="lazy" />
         </div>
         <div>
-          <img src={bannerImg3} className="w-full object-cover" alt="Banner 3" />
+          <img src={bannerImg3} className="w-full object-cover" alt="Banner 3" loading="lazy" />
         </div>
       </Carousel>
 

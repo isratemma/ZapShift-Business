@@ -37,6 +37,7 @@ const Features = () => {
               src={feature.img}
               alt={feature.title}
               className="w-24 h-24 object-contain flex-shrink-0"
+              loading="lazy"
             />
             <div>
               <h3 className="text-lg font-bold text-gray-900 mb-2">{feature.title}</h3>
