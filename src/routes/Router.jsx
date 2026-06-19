@@ -1,12 +1,21 @@
 import { createBrowserRouter } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
 import RootLayout from '../layouts/RootLayout';
 import AuthLayouts from '../layouts/AuthLayouts';
 import PrivateRoute from './PrivateRoute';
-import Home from '../pages/Home/Home';
-import Coverage from '../pages/Coverage/Coverage';
-import Login from '../pages/Auth/Login';
-import Register from '../pages/Auth/Register';
-import ForgotPassword from '../pages/Auth/ForgotPassword';
+
+// Lazy-load all pages — they only download when first visited
+const Home          = lazy(() => import('../pages/Home/Home'));
+const Coverage      = lazy(() => import('../pages/Coverage/Coverage'));
+const Login         = lazy(() => import('../pages/Auth/Login'));
+const Register      = lazy(() => import('../pages/Auth/Register'));
+const ForgotPassword = lazy(() => import('../pages/Auth/ForgotPassword'));
+
+const PageLoader = () => (
+  <div className="min-h-[60vh] flex items-center justify-center">
+    <span className="loading loading-spinner loading-lg text-[#CAEB66]"></span>
+  </div>
+);
 
 export const router = createBrowserRouter([
   {
@@ -15,13 +24,15 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        Component: Home,
+        element: <Suspense fallback={<PageLoader />}><Home /></Suspense>,
       },
       {
         path: 'coverage',
         element: (
           <PrivateRoute>
-            <Coverage />
+            <Suspense fallback={<PageLoader />}>
+              <Coverage />
+            </Suspense>
           </PrivateRoute>
         ),
         loader: () => fetch('/warehouses.json').then((res) => res.json()),
@@ -32,9 +43,18 @@ export const router = createBrowserRouter([
     path: '/auth',
     Component: AuthLayouts,
     children: [
-      { path: 'login',            Component: Login },
-      { path: 'register',         Component: Register },
-      { path: 'forgot-password',  Component: ForgotPassword },
+      {
+        path: 'login',
+        element: <Suspense fallback={<PageLoader />}><Login /></Suspense>,
+      },
+      {
+        path: 'register',
+        element: <Suspense fallback={<PageLoader />}><Register /></Suspense>,
+      },
+      {
+        path: 'forgot-password',
+        element: <Suspense fallback={<PageLoader />}><ForgotPassword /></Suspense>,
+      },
     ],
   },
 ]);
