@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import useAuth from '../../hooks/useAuth';
+import imageUploadIcon from '../../assets/image-upload-icon.png';
 
 const rules = [
   { id: 'length',  label: 'At least 8 characters',           test: (p) => p.length >= 8 },
@@ -17,12 +18,26 @@ const getStrength = (passed) => {
   return { label: '', color: '', width: 'w-0' };
 };
 
+const uploadImageToImgbb = async (file) => {
+  const formData = new FormData();
+  formData.append('image', file);
+  const res = await fetch(
+    `https://api.imgbb.com/1/upload?key=${import.meta.env.VITE_IMGBB_API_KEY}`,
+    { method: 'POST', body: formData }
+  );
+  const data = await res.json();
+  if (!data.success) throw new Error('Image upload failed');
+  return data.data.url;
+};
+
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword]         = useState('');
   const [focused, setFocused]           = useState(false);
   const [error, setError]               = useState('');
   const [loading, setLoading]           = useState(false);
+  const [preview, setPreview]           = useState(null);
+  const [imageFile, setImageFile]       = useState(null);
 
   const { registerUser, updateUserProfile, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
@@ -30,6 +45,13 @@ const Register = () => {
   const passed   = rules.filter((r) => r.test(password)).length;
   const allValid = passed === rules.length;
   const strength = getStrength(passed);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setImageFile(file);
+    setPreview(URL.createObjectURL(file));
+  };
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -41,11 +63,15 @@ const Register = () => {
     const email = e.target.email.value;
 
     try {
+      let photoURL = '';
+      if (imageFile) {
+        photoURL = await uploadImageToImgbb(imageFile);
+      }
       await registerUser(email, password);
-      await updateUserProfile(name);
+      await updateUserProfile(name, photoURL);
       navigate('/');
     } catch (err) {
-      setError(friendlyError(err.code));
+      setError(friendlyError(err.code) || err.message);
     } finally {
       setLoading(false);
     }
@@ -73,6 +99,31 @@ const Register = () => {
       )}
 
       <form onSubmit={handleRegister} className="flex flex-col gap-5">
+
+        {/* Profile Photo */}
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-semibold text-gray-700">Profile Photo</label>
+          <label className="flex items-center gap-4 border border-dashed border-gray-300 rounded-xl px-4 py-3 cursor-pointer hover:border-[#CAEB66] transition group">
+            {preview ? (
+              <img src={preview} alt="preview" className="w-14 h-14 rounded-full object-cover border-2 border-[#CAEB66]" />
+            ) : (
+              <img src={imageUploadIcon} alt="upload" className="w-10 h-10 object-contain opacity-50 group-hover:opacity-80 transition" />
+            )}
+            <div>
+              <p className="text-sm font-medium text-gray-600">
+                {preview ? 'Change photo' : 'Click to upload photo'}
+              </p>
+              <p className="text-xs text-gray-400">JPG, PNG, WEBP — max 5MB</p>
+            </div>
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleImageChange}
+            />
+          </label>
+        </div>
+
         {/* Name */}
         <div className="flex flex-col gap-1">
           <label className="text-sm font-semibold text-gray-700">Full Name</label>
